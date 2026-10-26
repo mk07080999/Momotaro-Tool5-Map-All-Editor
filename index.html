@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>桃太郎電鐵地圖數據導出編輯器 - V68 左右對照完全版</title>
+<title>桃太郎電鐵地圖數據導出編輯器 - V70 左右對照完全版</title>
 <!-- 引入 html2pdf.js 用於將視覺化地圖圖片導出 PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -90,7 +90,7 @@ img {
 
 <div class="box" style="border-left: 5px solid #8e44ad; background: #faf5ff;">
     <div class="row" style="border-bottom: 2px solid #e9d5ff; padding-bottom: 6px; margin-bottom: 8px;">
-        <strong style="color: #6b21a8; font-size: 14px;">🎮 地圖編輯與控制總指揮面板</strong>
+        <strong style="color: #6b21a8; font-size: 14px;">🎮 地圖編輯與控制總指揮面板 (V70)</strong>
     </div>
 
     <div class="row" style="justify-content: space-between; align-items: flex-start; background: white; padding: 8px; border-radius: 6px; border: 1px solid #d8b4fe;">
@@ -207,15 +207,33 @@ img {
 </div>
 
 <div class="box">
-    <strong>📊 數據導出面板：</strong>
+    <strong>📊 數據導出與導入面板：</strong>
     <div style="font-size:11px; color:#666;">🎯 軌跡：</div><textarea id="outPath" readonly></textarea>
     <div style="font-size:11px; color:#666;">🚧 限制與合併 (新紀錄在上方)：</div><textarea id="outLock" readonly></textarea>
     
-    <div class="row" style="margin-top:5px; background:#f4f6f7; padding:6px; border-radius:4px; display:flex; flex-direction:column; align-items:stretch; gap:6px;">
+    <!-- 📋 直接貼上 JSON 快速匯入區 -->
+    <div style="margin-top: 8px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px;">
+        <div style="font-size:11px; font-weight:bold; color:#0284c7; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
+            <span>📋 直接貼上 JSON 快速匯入：</span>
+            <span id="pasteJsonMsg" style="color:#059669; display:none; font-size:10px;">✅ 成功匯入數據！</span>
+        </div>
+        <textarea id="jsonPasteInput" placeholder="請在此處直接貼上您的 JSON 文字數據內容..." style="height: 60px; margin-bottom: 6px;"></textarea>
+        <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+            <button class="btn" style="background:#64748b; color:white; padding:4px 8px; font-size:11px;" onclick="document.getElementById('jsonPasteInput').value=''">🧹 清空輸入框</button>
+            <button class="btn" style="background:#0284c7; color:white; padding:4px 12px; font-size:11px;" onclick="importPastedJSON()">📥 套用貼上的 JSON</button>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top:8px; background:#f4f6f7; padding:6px; border-radius:4px; display:flex; flex-direction:column; align-items:stretch; gap:6px;">
         <button class="btn" style="background:#8e44ad; color:white;" onclick="generateTextGridModal()">🗺️ 產生左右分割對照地圖檢視</button>
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <button class="btn" style="background:#34495e; color:white;" onclick="copyJSON()">💻 複製 JSON</button>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <button class="btn" style="background:#34495e; color:white;" onclick="copyJSON()">💻 複製當前 JSON</button>
             <span id="copyOk" style="color:#27ae60; font-weight:bold; font-size: 11px; display:none;">已複製成功</span>
+            
+            <label class="btn" style="background:#475569; color:white; cursor:pointer; margin-left:auto; font-size:11px; padding:4px 8px;">
+                📂 從檔案匯入 JSON
+                <input type="file" id="jsonUploadInput" accept=".json" onchange="importJSON(event)" style="display:none;">
+            </label>
         </div>
     </div>
 </div>
@@ -235,7 +253,7 @@ img {
         
         <!-- 1. 頂部總控制列 (預設隱藏說明) -->
         <div style="display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:8px 12px; border-radius:6px; border:1px solid #334155;">
-            <strong style="font-size:16px; color:#38bdf8;">🗺️ 左右對照編輯器</strong>
+            <strong style="font-size:16px; color:#38bdf8;">🗺️ 左右對照編輯器 (V70)</strong>
             
             <div style="display:flex; gap:8px;">
                 <button class="btn" id="btnToggleInstructions" style="background:#2563eb; color:white; padding:5px 10px; font-size:11px;" onclick="toggleInstructions()">👁️ 顯示說明</button>
@@ -254,7 +272,7 @@ img {
             </div>
 
             <div style="flex:1; min-width:280px; background:#064e3b22; border:1px solid #05966988; padding:6px 10px; border-radius:4px; color:#a7f3d0; display:flex; flex-direction:column; gap:2px;">
-                <strong style="color:#34d399;">👉 👉 右側原圖對照說明：</strong>
+                <strong style="color:#34d399;">👉 右側原圖對照說明：</strong>
                 <span>• <b>拖曳縮放</b>：平移與對照原始地圖。</span>
                 <span>• <b>標記塗抹</b>：自由塗抹綠色標記，清除按鈕瞬間清空無彈窗。</span>
             </div>
@@ -332,7 +350,7 @@ img {
         </div>
         
         <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #334155; padding-top:4px; font-size:10px; color:#64748b;">
-            <span>※ 提示：模式一（點擊編輯）專注點擊觸發彈窗，絕無平移干擾；模式三才可自由平移畫布。</span>
+            <span>※ 提示：V70版完美支援直接貼上 JSON 匯入數據。</span>
         </div>
     </div>
 </div>
@@ -442,7 +460,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('keydown', function(e) {
-    if (document.activeElement.tagName === 'INPUT') return;
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
     if (e.key === 'ArrowUp')    { e.preventDefault(); move(0, 1); }
     if (e.key === 'ArrowDown')  { e.preventDefault(); move(0, -1); }
     if (e.key === 'ArrowLeft')  { e.preventDefault(); move(-1, 0); }
@@ -1094,6 +1112,68 @@ function showSlots() {
     }).join('');
 }
 
+// 核心：JSON 解析與資料還原邏輯
+function processJSONData(jsonObj) {
+    let d = getCur();
+    if (jsonObj.nodes && Array.isArray(jsonObj.nodes)) {
+        d.path = jsonObj.nodes.map(n => ({ x: n.x, y: n.y }));
+        d.types = {};
+        jsonObj.nodes.forEach(n => {
+            d.types[`${n.x},${n.y}`] = n.type || "normal";
+        });
+    }
+    if (jsonObj.blocked && Array.isArray(jsonObj.blocked)) d.blocked = jsonObj.blocked;
+    if (jsonObj.oneway && Array.isArray(jsonObj.oneway)) d.oneway = jsonObj.oneway;
+    if (jsonObj.shortcuts && Array.isArray(jsonObj.shortcuts)) d.shortcuts = jsonObj.shortcuts;
+
+    currentPointerIndex = d.path.length > 0 ? d.path.length - 1 : -1;
+    calculateStatistics();
+    
+    let startX = d.path.length > 0 ? d.path[0].x : 0;
+    let startY = d.path.length > 0 ? d.path[0].y : 0;
+    render(startX, startY);
+    if (document.getElementById('textGridModal').style.display === 'flex') {
+        generateTextGridModal();
+    }
+}
+
+// 📋 1. 直接貼上 JSON 文字匯入
+function importPastedJSON() {
+    let rawText = document.getElementById('jsonPasteInput').value.trim();
+    if (!rawText) {
+        alert("⚠️ 請先在框內貼上 JSON 內容！");
+        return;
+    }
+    try {
+        let jsonObj = JSON.parse(rawText);
+        processJSONData(jsonObj);
+        
+        let msg = document.getElementById('pasteJsonMsg');
+        msg.style.display = 'inline';
+        setTimeout(() => { msg.style.display = 'none'; }, 2500);
+    } catch (err) {
+        alert("⚠️ 匯入失敗：無效的 JSON 格式，請確認貼上的文字格式。");
+    }
+}
+
+// 📂 2. 從檔案匯入 JSON
+function importJSON(e) {
+    let file = e.target.files[0];
+    if (!file) return;
+    let reader = new FileReader();
+    reader.onload = function(event) {
+        try {
+            let jsonObj = JSON.parse(event.target.result);
+            processJSONData(jsonObj);
+            alert("📂 成功匯入 JSON 檔案！");
+        } catch (err) {
+            alert("⚠️ 匯入失敗：JSON 檔案格式錯誤。");
+        }
+        e.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
 function initAttrPickerModal() {
     let container = document.getElementById('pickerButtonsContainer');
     let html = [];
@@ -1218,7 +1298,7 @@ function deleteNodeFromPicker() {
     generateTextGridModal();
 }
 
-// 模式一：純點擊編輯功能 (點擊即觸發彈窗，絕不拖曳車站)
+// 模式一：純點擊編輯功能 (穩定觸發彈窗)
 function handleLeftNodeClick(x, y, isExisting) {
     if (leftMode === 'edit') {
         openAttrPicker(x, y, isExisting);
@@ -1432,7 +1512,7 @@ function generateTextGridModal() {
     setupViewportPanAndDrag();
 }
 
-// 嚴格隔離模式：如果在模式一（點擊編輯）或模式二（點對點移動），禁止畫布拖曳平移；唯有在模式三（拖曳縮放）才允許平移
+// 嚴格隔離模式：模式一與模式二禁止平移，唯有模式三允許平移
 function setupViewportPanAndDrag() {
     let leftContainer = document.getElementById('htmlVisualContainer');
     let rightContainer = document.getElementById('compareContainer');
@@ -1444,10 +1524,7 @@ function setupViewportPanAndDrag() {
         let scrollLeft = 0, scrollTop = 0;
 
         container.onpointerdown = function(e) {
-            // 右側塗抹模式下，左鍵繪圖，不進行視角平移
             if (isRight && rightInteractiveMode === 'draw' && e.button === 0) return;
-            
-            // 關鍵防呆：如果在左側且處於「模式一 (edit)」或「模式二 (move)」，絕對不允許平移畫布，確保點擊編輯 100% 順暢！
             if (!isRight && leftMode !== 'pan') return;
 
             isMouseDown = true;
@@ -1473,7 +1550,6 @@ function setupViewportPanAndDrag() {
             }
         };
 
-        // 滾輪縮放監聽
         container.onwheel = function(e) {
             e.preventDefault();
             if (isRight) {
